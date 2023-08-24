@@ -1,0 +1,56 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Read the CSV file
+data = pd.read_csv('rfnetwork.csv')  # replace with the path to your file
+
+# Remove outliers
+data = data[data['DVSuccess'] != 100]
+
+# List of strategies
+strategies = ['Nectar', 'Pollen', 'Both', 'Parasitoid', 'Predator', 'Parasit&Pred', 'Beetles', 'Hoverflies', 
+              'Lacewings', 'Mites', 'Wasps', '1_Field_Crops', '1_FTreesOrchards', '1_VegHerbs', '1_VineBerries', 
+              '1_SporMisCrops', '2_Cover_or_Cultivated_Crops', '2_Flowering_Plants', '2_Fruit_Trees', 
+              '2_Pasture_Forage', '2_Wild_Plants', '2_Combo_or_Miscellaneous']
+
+# Create a 'strategy_id' for each paper
+data['strategy_id'] = data[strategies].astype(str).agg(''.join, axis=1)
+
+# Group by 'strategy_id' to calculate the average success and count the number of papers
+grouped = data.groupby('strategy_id').agg(
+    avg_DVSuccess=('DVSuccess', 'mean'),
+    count_papers=('DVSuccess', 'size')
+).reset_index()
+
+# Sorting the results by average DVSuccess for better visualization
+grouped = grouped.sort_values(by='avg_DVSuccess', ascending=False)
+
+# Prepare data for heatmap from the original data dataframe
+heatmap_data = data.drop_duplicates(subset=['strategy_id']).set_index('strategy_id')[strategies]
+
+# Sorting heatmap data to match our grouped order
+heatmap_data = heatmap_data.loc[grouped['strategy_id']]
+
+# Plotting
+fig, (ax1, ax2) = plt.subplots(figsize=(20,15), ncols=2, gridspec_kw={'width_ratios': [5,1]})
+
+# Heatmap for strategies using a greyish-blue and scarlet red
+sns.heatmap(heatmap_data, cmap=["#91C8E4", "#191D88"], cbar=False, ax=ax1, yticklabels=False)
+ax1.set_ylabel('Strategy Ranked by Success (Top is Most Successful)')
+ax1.set_xlabel('Variables')
+ax1.set_title('Strategies from Most to Least Successful')
+
+# Adding success score labels
+for idx, value in enumerate(grouped["avg_DVSuccess"]):
+    ax1.text(-1, idx, int(round(value)), va="center")
+
+# Bar plot for number of papers in black color
+sns.barplot(x='count_papers', y='strategy_id', data=grouped, ax=ax2, color='#11009E', orient='h')
+ax2.set_ylabel('') 
+ax2.set_yticklabels([])
+ax2.set_xlabel('Number of Papers')
+ax2.set_title('Number of Papers by Strategy')
+
+plt.tight_layout()
+plt.show()
