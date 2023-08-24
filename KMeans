@@ -1,0 +1,24 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+
+# Load the data
+data = pd.read_csv('data.csv')  # assuming the column with the variable of interest is called 'name'
+insects = data['name'].tolist()
+
+# Convert text data to TF-IDF vectors
+vectorizer = TfidfVectorizer(stop_words='english')
+X = vectorizer.fit_transform(insects)
+
+# Cluster using K-Means
+num_clusters = 5  # change this to the number of clusters you want
+km = KMeans(n_clusters=num_clusters)
+km.fit(X)
+
+# Add cluster labels to the original data
+data['cluster'] = km.labels_
+
+# Save the results
+data.to_csv('clustered_data.csv', index=False)
+
+print(data)
