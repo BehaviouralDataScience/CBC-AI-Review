@@ -1,0 +1,29 @@
+# Assume you've already parsed the website and extracted text (see Text Extraction and Parsing Code)
+
+# Split the text into segments for GPT processing
+segments = text.split('\n\n')  # Split by paragraphs
+
+# The following function abstractly represents the interaction with GPT
+def get_gpt_summary(segment):
+    # This function should interact with the GPT-4 API or whichever version of GPT you're using
+    # to get a concise summary or the main theme of the segment.
+    # Here, we just return the segment for the sake of example.
+    return segment  #replace this with GPT-generated summary
+
+# Get GPT summaries
+gpt_summaries = [get_gpt_summary(segment) for segment in segments]
+
+# Next, you can either manually inspect the summaries to identify topics
+# or use further processing (e.g., keyword extraction) to automate this step.
+
+# We use sklearn's CountVectorizer to extract keywords:
+vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
+document_term_matrix = vectorizer.fit_transform(gpt_summaries)
+feature_names = np.array(vectorizer.get_feature_names_out())
+
+# Display top keywords for each GPT-generated summary
+for idx, summary in enumerate(gpt_summaries):
+    matrix_row = document_term_matrix[idx].toarray().ravel()
+    top_keywords_idx = matrix_row.argsort()[:-11:-1]
+    top_keywords = feature_names[top_keywords_idx]
+    print(f"Segment {idx + 1} Keywords: {', '.join(top_keywords)}")
