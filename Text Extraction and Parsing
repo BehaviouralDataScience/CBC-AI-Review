@@ -1,0 +1,46 @@
+import requests
+from bs4 import BeautifulSoup
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+import pandas as pd
+import numpy as np
+import re
+
+# Fetch the HTML
+url = "https://www.frontiersin.org/articles/10.3389/fevo.2019.00006/full"  # replace with your web link
+response = requests.get(url)
+
+# Parse the HTML with BeautifulSoup
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Extract the text
+text = soup.get_text()
+
+# Split the text into a list of documents (e.g., sentences)
+documents = text.split('.')
+
+# Define your topics with associated keywords (you can add more keywords as needed)
+topics = {
+    "Topic 1": ["keyword11", "keyword12", "keyword13"],
+    "Topic 2": ["keyword21", "keyword22", "keyword23"],
+    "Topic 3": ["keyword31", "keyword32", "keyword33"],
+    "Topic 4": ["keyword41", "keyword42", "keyword43"],
+}
+
+# If the above is not enough and you receive an empty selection, you need to relax association assumptions
+# and extract sentences related to each topic
+topic_sentences = {topic: [] for topic in topics}
+for sentence in documents:
+    for topic, keywords in topics.items():
+        if any(re.search(r'\b{}\b'.format(keyword), sentence, re.IGNORECASE) for keyword in keywords):
+            topic_sentences[topic].append(sentence)
+
+# Print the extracted sentences for each topic
+for topic, sentences in topic_sentences.items():
+    print(f"Topic: {topic}")
+    if len(sentences) > 0:
+        for sentence in sentences:
+            print(f" - {sentence}")
+    else:
+        print(" - No sentences found for this topic.")
+    print("\n")
